@@ -54,7 +54,7 @@ def add_to_portfolio():
 import numpy as np
 from portfolio_optimizer.optimizer import PortfolioOptimizer
 
-@portfolio_api.route("/portfolio/track", methods=["GET"])
+@portfolio_api.route("/track", methods=["GET"])
 @jwt_required()
 def track_portfolio():
     """
@@ -69,12 +69,12 @@ def track_portfolio():
             return jsonify({"message": "No portfolio found for this user."}), 404
 
         assets = [asset["ticker"] for asset in user_portfolio["assets"]]
-        holdings = {asset["ticker"]: (asset["quantity"], asset["average_price"]) for asset in user_portfolio["assets"]}
+        holdings = {asset["ticker"]: (asset["quantity"], asset["purchase_price"]) for asset in user_portfolio["assets"]}
 
         optimizer = PortfolioOptimizer(assets, returns=np.zeros(len(assets)), cov_matrix=np.zeros((len(assets), len(assets))))
         
-        # Get live prices and ensure they are converted to standard Python floats
-        live_prices = {k: float(v) if isinstance(v, np.generic) else v for k, v in optimizer.get_live_prices().items()}
+        # Get live prices
+        live_prices = optimizer.get_live_prices()
 
         portfolio_value = 0
         asset_values = {}
