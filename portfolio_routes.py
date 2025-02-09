@@ -131,21 +131,29 @@ def track_portfolio():
                     "percentage_change": "N/A"
                 }
 
-        # Save portfolio history
-        today = date.today()
-        existing_history = db.portfolio_history.find_one({
+        # Save daily snapshot of portfolio history
+        today = date.today().isoformat()
+        existing_snapshot = db.portfolio_history.find_one({
             "user_email": user_email,
-            "date": today.isoformat()
+            "date": today
         })
 
-        if not existing_history:
-            portfolio_history_entry = {
+        if not existing_snapshot:
+            snapshot = {
                 "user_email": user_email,
+                "date": today,
                 "portfolio_value": round(portfolio_value, 2),
-                "date": today.isoformat(),
-                "assets": assets_for_history
+                "assets": [
+                    {
+                        "ticker": asset["ticker"],
+                        "quantity": asset["quantity"],
+                        "purchase_price": asset["purchase_price"],
+                        "current_price": asset["current_price"]
+                    }
+                    for asset in assets_for_history
+                ]
             }
-            db.portfolio_history.insert_one(portfolio_history_entry)
+            db.portfolio_history.insert_one(snapshot)
 
         return jsonify({
             "portfolio_value": round(portfolio_value, 2),
