@@ -90,10 +90,10 @@ def track_portfolio():
                 asset_values[ticker] = {
                     "quantity": quantity,
                     "purchase_price": purchase_price,
-                    "current_price": current_price,
-                    "current_value": current_value,
-                    "profit_loss": profit_loss,
-                    "percentage_change": percentage_change
+                    "current_price": round(current_price, 2),
+                    "current_value": round(current_value, 2),
+                    "profit_loss": round(profit_loss, 2),
+                    "percentage_change": round(percentage_change, 2)
                 }
                 portfolio_value += current_value
             else:
