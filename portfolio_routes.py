@@ -16,17 +16,37 @@ def add_to_portfolio():
         user_email = get_jwt_identity()
         data = request.json
 
-        portfolio_entry = {
-            "user_email": user_email,
+        new_asset = {
             "ticker": data.get("ticker"),
             "quantity": data.get("quantity"),
             "average_price": data.get("average_price"),
-            "investment_date": data.get("investment_date"),
-            "created_at": datetime.utcnow()
+            "investment_date": data.get("investment_date")
         }
 
-        db.portfolios.insert_one(portfolio_entry)
-        return jsonify({"message": "Stock added to portfolio successfully!"}), 201
+        existing_portfolio = db.portfolios.find_one({"user_email": user_email})
+
+        if existing_portfolio:
+            # Check if stock already exists in portfolio
+            asset_exists = any(asset["ticker"] == new_asset["ticker"] for asset in existing_portfolio.get("assets", []))
+
+            if asset_exists:
+                return jsonify({"message": "Stock already exists in portfolio!"}), 400
+            
+            # Push new stock into the assets array
+            db.portfolios.update_one(
+                {"user_email": user_email},
+                {"$push": {"assets": new_asset}}
+            )
+        else:
+            # Create a new portfolio entry
+            portfolio_entry = {
+                "user_email": user_email,
+                "assets": [new_asset],
+                "created_at": datetime.utcnow()
+            }
+            db.portfolios.insert_one(portfolio_entry)
+
+        return jsonify({"message": f"Stock {new_asset['ticker']} added successfully for {user_email}!"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -36,7 +56,10 @@ def add_to_portfolio():
 def get_portfolio():
     try:
         user_email = get_jwt_identity()
-        user_portfolio = list(db.portfolios.find({"user_email": user_email}, {"_id": 0}))
+        user_portfolio = db.portfolios.find_one({"user_email": user_email}, {"_id": 0})
+
+        if not user_portfolio:
+            return jsonify({"message": "No portfolio found for this user."}), 404
 
         return jsonify(user_portfolio)
 
