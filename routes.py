@@ -222,6 +222,7 @@ def investment_suggestions():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Register the user and portfolio blueprints
+# Register the user, portfolio, and goal blueprints
 api.register_blueprint(user_api, url_prefix='/user')
 api.register_blueprint(portfolio_api, url_prefix='/portfolio')
+api.register_blueprint(goal_api, url_prefix='/goal')
