@@ -11,7 +11,7 @@ class PortfolioOptimizer:
     def get_live_prices(self):
         """
         Fetches real-time stock prices for all assets in the portfolio.
-        :return: Dictionary with asset tickers as keys and live prices as values.
+        :return: Dictionary with asset tickers as keys and latest Close prices as values.
         """
         prices = {}
         for ticker in self.assets:
