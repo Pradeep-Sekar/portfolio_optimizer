@@ -1,9 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
 import yfinance as yf
 from pymongo import MongoClient
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from portfolio_routes import portfolio_api
+from user_routes import user_api
 
 # MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
@@ -14,55 +13,6 @@ api = Blueprint('api', __name__)
 @api.route("/")
 def home():
     return "Welcome to the Portfolio Optimizer API!"
-
-# User Registration Route
-@api.route("/register", methods=["POST"])
-def register():
-    data = request.json
-    email = data.get("email")
-    password = data.get("password")
-    
-    if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
-
-    # Check if user already exists
-    if db.users.find_one({"email": email}):
-        return jsonify({"error": "User already exists"}), 400
-
-    # Hash the password and store user
-    hashed_password = generate_password_hash(password, method="pbkdf2:sha256", salt_length=16)
-    user = {
-        "email": email,
-        "password_hash": hashed_password,
-        "created_at": datetime.utcnow()
-    }
-    db.users.insert_one(user)
-
-    return jsonify({"message": "User registered successfully!"}), 201
-
-# User Login Route (JWT Token Generation)
-@api.route("/login", methods=["POST"])
-def login():
-    data = request.json
-    email = data.get("email")
-    password = data.get("password")
-
-    user = db.users.find_one({"email": email})
-    
-    if not user or not check_password_hash(user["password_hash"], password):
-        return jsonify({"error": "Invalid email or password"}), 401
-
-    # Generate JWT token
-    access_token = create_access_token(identity=email)
-    return jsonify({"access_token": access_token})
-
-# Protected Route (Requires JWT)
-@api.route("/get_users", methods=["GET"])
-@jwt_required()
-def get_users():
-    current_user = get_jwt_identity()
-    users = list(db.users.find({}, {"_id": 0, "password_hash": 0}))  # Exclude password
-    return jsonify({"current_user": current_user, "users": users})
 
 # List of known Indian tickers (can be expanded dynamically later)
 known_nse_tickers = {"RELIANCE", "TCS", "INFY", "HDFC", "ICICIBANK", "KOTAKBANK", "SBIN", "ITC"}
@@ -269,37 +219,6 @@ def investment_suggestions():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-@api.route("/add_to_portfolio", methods=["POST"])
-@jwt_required()
-def add_to_portfolio():
-    try:
-        user_email = get_jwt_identity()
-        data = request.json
-
-        portfolio_entry = {
-            "user_email": user_email,
-            "ticker": data.get("ticker"),
-            "quantity": data.get("quantity"),
-            "average_price": data.get("average_price"),
-            "investment_date": data.get("investment_date"),
-            "created_at": datetime.utcnow()
-        }
-
-        db.portfolios.insert_one(portfolio_entry)
-        return jsonify({"message": "Stock added to portfolio successfully!"}), 201
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@api.route("/portfolio", methods=["GET"])
-@jwt_required()
-def get_portfolio():
-    try:
-        user_email = get_jwt_identity()
-        user_portfolio = list(db.portfolios.find({"user_email": user_email}, {"_id": 0}))
-
-        return jsonify(user_portfolio)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# Register the user and portfolio blueprints
+api.register_blueprint(user_api, url_prefix='/user')
+api.register_blueprint(portfolio_api, url_prefix='/portfolio')
