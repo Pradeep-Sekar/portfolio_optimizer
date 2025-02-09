@@ -107,7 +107,7 @@ def track_portfolio():
                 }
 
         return jsonify({
-            "portfolio_value": portfolio_value,
+            "portfolio_value": round(portfolio_value, 2),
             "assets": asset_values
         })
 
