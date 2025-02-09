@@ -1,8 +1,12 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from pymongo import MongoClient
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash #, check_password_hash
 from datetime import datetime
+
+# Temporarily disable hashing for debugging
+def check_password_hash(stored_password, entered_password):
+    return stored_password == entered_password
 
 # MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
