@@ -51,9 +51,16 @@ def add_to_portfolio():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@portfolio_api.route("/portfolio", methods=["GET"])
+import numpy as np
+from portfolio_optimizer.optimizer import PortfolioOptimizer
+
+@portfolio_api.route("/portfolio/track", methods=["GET"])
 @jwt_required()
-def get_portfolio():
+def track_portfolio():
+    """
+    Fetch real-time stock prices and compute portfolio performance.
+    :return: JSON response with portfolio valuation.
+    """
     try:
         user_email = get_jwt_identity()
         user_portfolio = db.portfolios.find_one({"user_email": user_email}, {"_id": 0})
@@ -61,7 +68,48 @@ def get_portfolio():
         if not user_portfolio:
             return jsonify({"message": "No portfolio found for this user."}), 404
 
-        return jsonify(user_portfolio)
+        assets = [asset["ticker"] for asset in user_portfolio["assets"]]
+        holdings = {asset["ticker"]: (asset["quantity"], asset["average_price"]) for asset in user_portfolio["assets"]}
+
+        optimizer = PortfolioOptimizer(assets, returns=np.zeros(len(assets)), cov_matrix=np.zeros((len(assets), len(assets))))
+        
+        # Get live prices and ensure they are converted to standard Python floats
+        live_prices = {k: float(v) if isinstance(v, np.generic) else v for k, v in optimizer.get_live_prices().items()}
+
+        portfolio_value = 0
+        asset_values = {}
+
+        for ticker, (quantity, purchase_price) in holdings.items():
+            current_price = live_prices.get(ticker, None)
+
+            if current_price is not None:
+                current_value = quantity * current_price
+                profit_loss = current_value - (quantity * purchase_price)
+                percentage_change = ((profit_loss) / (quantity * purchase_price)) * 100
+
+                asset_values[ticker] = {
+                    "quantity": quantity,
+                    "purchase_price": purchase_price,
+                    "current_price": current_price,
+                    "current_value": current_value,
+                    "profit_loss": profit_loss,
+                    "percentage_change": percentage_change
+                }
+                portfolio_value += current_value
+            else:
+                asset_values[ticker] = {
+                    "quantity": quantity,
+                    "purchase_price": purchase_price,
+                    "current_price": "N/A",
+                    "current_value": "N/A",
+                    "profit_loss": "N/A",
+                    "percentage_change": "N/A"
+                }
+
+        return jsonify({
+            "portfolio_value": portfolio_value,
+            "assets": asset_values
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
