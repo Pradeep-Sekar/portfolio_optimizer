@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, date
 
 # MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
@@ -78,6 +78,9 @@ def track_portfolio():
 
         portfolio_value = 0
         asset_values = {}
+        
+        # Prepare asset values for history
+        assets_for_history = []
 
         for ticker, (quantity, purchase_price) in holdings.items():
             current_price = live_prices.get(ticker, None)
@@ -96,6 +99,13 @@ def track_portfolio():
                     "percentage_change": round(percentage_change, 2)
                 }
                 portfolio_value += current_value
+                
+                assets_for_history.append({
+                    "ticker": ticker,
+                    "quantity": quantity,
+                    "purchase_price": purchase_price,
+                    "current_price": round(current_price, 2)
+                })
             else:
                 asset_values[ticker] = {
                     "quantity": quantity,
@@ -105,6 +115,22 @@ def track_portfolio():
                     "profit_loss": "N/A",
                     "percentage_change": "N/A"
                 }
+
+        # Save portfolio history
+        today = date.today()
+        existing_history = db.portfolio_history.find_one({
+            "user_email": user_email,
+            "date": today.isoformat()
+        })
+
+        if not existing_history:
+            portfolio_history_entry = {
+                "user_email": user_email,
+                "portfolio_value": round(portfolio_value, 2),
+                "date": today.isoformat(),
+                "assets": assets_for_history
+            }
+            db.portfolio_history.insert_one(portfolio_history_entry)
 
         return jsonify({
             "portfolio_value": round(portfolio_value, 2),
