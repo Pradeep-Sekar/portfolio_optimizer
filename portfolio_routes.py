@@ -51,6 +51,21 @@ def add_to_portfolio():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@portfolio_api.route("/history", methods=["GET"])
+@jwt_required()
+def get_portfolio_history():
+    try:
+        user_email = get_jwt_identity()
+        portfolio_history = list(db.portfolio_history.find(
+            {"user_email": user_email},
+            {"_id": 0}
+        ).sort("date", -1))  # Sort by date descending (most recent first)
+
+        return jsonify(portfolio_history)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 import numpy as np
 from portfolio_optimizer.optimizer import PortfolioOptimizer
 
