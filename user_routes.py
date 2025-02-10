@@ -10,6 +10,8 @@ db = client["portfolio_optimizer"]
 
 user_api = Blueprint('user_api', __name__)
 
+
+
 # User Registration Route
 @user_api.route("/register", methods=["POST"])
 def register():
