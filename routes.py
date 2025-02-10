@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from portfolio_routes import portfolio_api
 from user_routes import user_api
 from goal_routes import goal_api
+from portfolio_history import portfolio_history_api
 
 # MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
@@ -74,3 +75,4 @@ def get_market_data():
 api.register_blueprint(user_api, url_prefix='/user')
 api.register_blueprint(portfolio_api, url_prefix='/portfolio')
 api.register_blueprint(goal_api, url_prefix='/goal')
+api.register_blueprint(portfolio_history_api, url_prefix="/portfolio")
