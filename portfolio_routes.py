@@ -51,7 +51,7 @@ def add_to_portfolio():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@portfolio_api.route("/portfolio", methods=["GET"])
+@portfolio_api.route("/", methods=["GET"])
 @jwt_required()
 def get_portfolio():
     """
