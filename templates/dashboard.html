@@ -57,7 +57,7 @@
                         const investmentValue = asset.quantity * purchasePrice;
                         const gainLoss = currentValue - investmentValue;
                         const percentChange = investmentValue ? ((gainLoss / investmentValue) * 100) : 0;
-                        const investmentDate = asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString() : "Unknown";
+                        const investmentDate = asset.investment_date ? new Date(asset.investment_date).toLocaleDateString() : "Unknown";
                         
                         html += `
                             <tr>
