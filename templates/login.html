@@ -33,17 +33,18 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.data && data.data.access_token) {
+                if (data.status === "success") {
+                    console.log("Login Success!");
                     // Store token and expiration
                     localStorage.setItem("access_token", data.data.access_token);
                     localStorage.setItem("token_type", data.data.token_type);
                     localStorage.setItem("token_expiry", Date.now() + (data.data.expires_in * 1000));
                     
-                    console.log("Login successful, redirecting to dashboard...");
+                    console.log("Redirecting to dashboard...");
                     window.location.replace("/dashboard");
                 } else {
-                    document.getElementById("errorMessage").textContent = 
-                        data.message || "Login failed";
+                    console.error("Login failed:", data.message);
+                    document.getElementById("errorMessage").textContent = "Login Failed.";
                 }
             })
             .catch(error => {
