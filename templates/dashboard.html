@@ -7,19 +7,57 @@
 </head>
 <body>
     <h1>Dashboard</h1>
-    <p>User: {{ portfolio.user_email }}</p>
-    <p>Portfolio Value: ${{ portfolio.portfolio_value }}</p>
-    <h2>Assets</h2>
-    <ul>
-        {% for asset in portfolio.assets %}
-        <li>{{ asset.ticker }}: {{ asset.quantity }} shares at ${{ asset.current_price }} each</li>
-        {% endfor %}
-    </ul>
+    <div id="portfolioData">Loading portfolio...</div>
+    <div id="errorMessage" style="color: red;"></div>
     
     <button onclick="logout()">Logout</button>
 
     <script>
-        // Check authentication on page load
+        function fetchPortfolio() {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                document.getElementById("errorMessage").textContent = "Authentication required";
+                return;
+            }
+
+            fetch("/portfolio", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    const portfolio = data.data;
+                    let html = `
+                        <p>User: ${portfolio.user_email}</p>
+                        <p>Portfolio Value: $${portfolio.portfolio_value}</p>
+                        <h2>Assets</h2>
+                        <ul>
+                    `;
+                    
+                    portfolio.assets.forEach(asset => {
+                        html += `
+                            <li>${asset.ticker}: ${asset.quantity} shares at $${asset.current_price} each 
+                            (Current Value: $${asset.current_value})</li>
+                        `;
+                    });
+                    
+                    html += '</ul>';
+                    document.getElementById("portfolioData").innerHTML = html;
+                    document.getElementById("errorMessage").textContent = "";
+                } else {
+                    document.getElementById("errorMessage").textContent = 
+                        data.message || "Failed to load portfolio";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching portfolio:", error);
+                document.getElementById("errorMessage").textContent = 
+                    "Error loading portfolio data";
+            });
+        }
+        // Check authentication and load portfolio on page load
         window.addEventListener('load', function() {
             const token = localStorage.getItem("access_token");
             if (!token) {
@@ -27,6 +65,7 @@
                 window.location.replace("/login");
                 return;
             }
+            fetchPortfolio();
         });
 
         function logout() {
