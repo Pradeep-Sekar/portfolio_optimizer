@@ -19,6 +19,16 @@
     <button onclick="logout()">Logout</button>
 
     <script>
+        // Check authentication on page load
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                console.log("No token found, redirecting to login");
+                window.location.replace("/login");
+                return;
+            }
+        });
+
         function logout() {
             console.log("Logging out...");
             // Clear all auth data from localStorage
