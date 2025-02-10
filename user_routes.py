@@ -43,23 +43,35 @@ def login():
     data = request.json
     email = data.get("email")
     password = data.get("password")
+    
+    print(f"Login attempt for email: {email}")
 
     if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
+        print("Login failed: Missing email or password")
+        return jsonify({"status": "error", "message": "Email and password are required"}), 400
 
     user = db.users.find_one({"email": email})
     if not user:
-        return jsonify({"error": "Invalid email or password"}), 401
-        
+        print(f"Login failed: No user found with email {email}")
+        return jsonify({"status": "error", "message": "Invalid email or password"}), 401
+    
+    print(f"User found, verifying password for {email}")
     if not check_password_hash(user["password_hash"], password):
-        return jsonify({"error": "Invalid email or password"}), 401
+        print(f"Login failed: Invalid password for {email}")
+        return jsonify({"status": "error", "message": "Invalid email or password"}), 401
 
+    print(f"Login successful for {email}")
     # Store user email in session and generate JWT token
     session["user_email"] = email
     access_token = create_access_token(identity=email)
     return jsonify({
+        "status": "success",
         "message": "Login successful",
-        "access_token": access_token
+        "data": {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": 86400  # 24 hours in seconds
+        }
     })
 
 # Protected Route (Requires JWT)
