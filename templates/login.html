@@ -33,12 +33,17 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.access_token) {
-                    localStorage.setItem("access_token", data.access_token);
-                    window.location.href = "/dashboard";
+                if (data.data && data.data.access_token) {
+                    // Store token and expiration
+                    localStorage.setItem("access_token", data.data.access_token);
+                    localStorage.setItem("token_type", data.data.token_type);
+                    localStorage.setItem("token_expiry", Date.now() + (data.data.expires_in * 1000));
+                    
+                    console.log("Login successful, redirecting to dashboard...");
+                    window.location.replace("/dashboard");
                 } else {
                     document.getElementById("errorMessage").textContent = 
-                        data.error || "Login failed";
+                        data.message || "Login failed";
                 }
             })
             .catch(error => {
