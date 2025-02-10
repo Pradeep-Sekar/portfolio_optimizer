@@ -29,21 +29,53 @@
             .then(data => {
                 if (data.status === "success") {
                     const portfolio = data.data;
+                    const lastUpdated = new Date().toLocaleString();
                     let html = `
                         <p>User: ${portfolio.user_email}</p>
-                        <p>Portfolio Value: $${portfolio.portfolio_value}</p>
+                        <p>Portfolio Value: ₹${portfolio.portfolio_value.toFixed(2)}</p>
+                        <p>Last Updated: ${lastUpdated}</p>
                         <h2>Assets</h2>
-                        <ul>
+                        <table border="1" style="border-collapse: collapse; width: 100%;">
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Quantity</th>
+                                <th>Current Price</th>
+                                <th>Current Value</th>
+                                <th>Purchase Price</th>
+                                <th>Investment Value</th>
+                                <th>Gain/Loss</th>
+                                <th>Change %</th>
+                                <th>Investment Date</th>
+                            </tr>
                     `;
                     
                     portfolio.assets.forEach(asset => {
+                        const currentValue = asset.quantity * asset.current_price;
+                        const investmentValue = asset.quantity * asset.average_price;
+                        const gainLoss = currentValue - investmentValue;
+                        const percentChange = ((gainLoss / investmentValue) * 100);
+                        const investmentDate = new Date(asset.purchase_date).toLocaleDateString();
+                        
                         html += `
-                            <li>${asset.ticker}: ${asset.quantity} shares at $${asset.current_price} each 
-                            (Current Value: $${asset.current_value})</li>
+                            <tr>
+                                <td>${asset.ticker}</td>
+                                <td>${asset.quantity}</td>
+                                <td>₹${asset.current_price.toFixed(2)}</td>
+                                <td>₹${currentValue.toFixed(2)}</td>
+                                <td>₹${asset.average_price.toFixed(2)}</td>
+                                <td>₹${investmentValue.toFixed(2)}</td>
+                                <td style="color: ${gainLoss >= 0 ? 'green' : 'red'}">
+                                    ₹${gainLoss.toFixed(2)}
+                                </td>
+                                <td style="color: ${gainLoss >= 0 ? 'green' : 'red'}">
+                                    ${percentChange.toFixed(2)}%
+                                </td>
+                                <td>${investmentDate}</td>
+                            </tr>
                         `;
                     });
                     
-                    html += '</ul>';
+                    html += '</table>';
                     document.getElementById("portfolioData").innerHTML = html;
                     document.getElementById("errorMessage").textContent = "";
                 } else {
