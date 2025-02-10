@@ -58,17 +58,20 @@
                         const gainLoss = currentValue - investmentValue;
                         const percentChange = investmentValue ? ((gainLoss / investmentValue) * 100) : 0;
                         const investmentDate = asset.investment_date ? new Date(asset.investment_date).toLocaleDateString() : "Unknown";
+
+                        // Determine currency symbol based on ticker
+                        const currencySymbol = asset.ticker.endsWith('.NS') ? '₹' : '$';
                         
                         html += `
                             <tr>
                                 <td>${asset.ticker}</td>
                                 <td>${asset.quantity}</td>
-                                <td>₹${currentPrice.toLocaleString('en-IN')}</td>
-                                <td>₹${currentValue.toLocaleString('en-IN')}</td>
-                                <td>₹${purchasePrice.toLocaleString('en-IN')}</td>
-                                <td>₹${investmentValue.toLocaleString('en-IN')}</td>
+                                <td>${currencySymbol}${currentPrice.toLocaleString('en-IN')}</td>
+                                <td>${currencySymbol}${currentValue.toLocaleString('en-IN')}</td>
+                                <td>${currencySymbol}${purchasePrice.toLocaleString('en-IN')}</td>
+                                <td>${currencySymbol}${investmentValue.toLocaleString('en-IN')}</td>
                                 <td style="color: ${gainLoss >= 0 ? 'green' : 'red'}">
-                                    ₹${gainLoss.toLocaleString('en-IN')}
+                                    ${currencySymbol}${gainLoss.toLocaleString('en-IN')}
                                 </td>
                                 <td style="color: ${gainLoss >= 0 ? 'green' : 'red'}">
                                     ${percentChange.toFixed(2)}%
