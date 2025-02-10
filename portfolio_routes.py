@@ -2,12 +2,24 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pymongo import MongoClient
 from datetime import datetime, date, timedelta
+import requests
+import numpy as np
+from portfolio_optimizer.optimizer import PortfolioOptimizer
 
 # MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
 db = client["portfolio_optimizer"]
 
 portfolio_api = Blueprint('portfolio_api', __name__)
+
+def fetch_usd_to_inr():
+    try:
+        response = requests.get("https://api.exchangerate-api.com/v4/latest/USD")
+        data = response.json()
+        return data['rates']['INR']
+    except Exception as e:
+        print(f"Error fetching exchange rate: {e}")
+        return 1  # Fallback to 1 if there's an error
 
 @portfolio_api.route("/add_to_portfolio", methods=["POST"])
 @jwt_required()
@@ -75,6 +87,9 @@ def get_portfolio():
         # Get current prices for all assets
         current_prices = optimizer.get_live_prices()
         
+        # Fetch USD to INR exchange rate
+        usd_to_inr = fetch_usd_to_inr()
+        
         # Calculate total portfolio value using current prices
         portfolio_value = 0
         updated_assets = []
@@ -86,6 +101,11 @@ def get_portfolio():
                 current_price = asset.get("average_price", 0)  # Fallback to average price
                 
             asset_value = asset.get("quantity", 0) * current_price
+            
+            # Convert to INR if the asset is in USD
+            if asset["ticker"].isalpha() and asset["ticker"].upper() in ["AAPL", "GOOGL", "MSFT"]:  # Example US stocks
+                asset_value *= usd_to_inr
+            
             portfolio_value += asset_value
             
             # Add current price to asset data
@@ -140,9 +160,6 @@ def get_portfolio_history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-import numpy as np
-from portfolio_optimizer.optimizer import PortfolioOptimizer
-
 @portfolio_api.route("/track", methods=["GET"])
 @jwt_required()
 def track_portfolio():
@@ -171,11 +188,19 @@ def track_portfolio():
         # Prepare asset values for history
         assets_for_history = []
 
+        # Fetch USD to INR exchange rate
+        usd_to_inr = fetch_usd_to_inr()
+
         for ticker, (quantity, purchase_price) in holdings.items():
             current_price = live_prices.get(ticker, None)
 
             if current_price is not None:
                 current_value = quantity * current_price
+                
+                # Convert to INR if the asset is in USD
+                if ticker.isalpha() and ticker.upper() in ["AAPL", "GOOGL", "MSFT"]:  # Example US stocks
+                    current_value *= usd_to_inr
+                
                 profit_loss = current_value - (quantity * purchase_price)
                 percentage_change = ((profit_loss) / (quantity * purchase_price)) * 100
 
@@ -193,7 +218,7 @@ def track_portfolio():
                     "ticker": ticker,
                     "quantity": quantity,
                     "purchase_price": purchase_price,
-                    "current_price": round(current_price, 2)
+                    "current_price": asset_values[ticker]["current_price"]
                 })
             else:
                 asset_values[ticker] = {
