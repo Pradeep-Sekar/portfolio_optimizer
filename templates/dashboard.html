@@ -27,6 +27,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log("Portfolio data:", data.data);
                 if (data.status === "success") {
                     const portfolio = data.data;
                     const lastUpdated = new Date().toLocaleString();
@@ -50,11 +51,12 @@
                     `;
                     
                     portfolio.assets.forEach(asset => {
-                        const currentValue = asset.quantity * asset.current_price;
-                        const investmentValue = asset.quantity * asset.average_price;
+                        const currentPrice = asset.current_price || 0;
+                        const currentValue = asset.quantity * currentPrice;
+                        const investmentValue = asset.quantity * (asset.average_price || 0);
                         const gainLoss = currentValue - investmentValue;
-                        const percentChange = ((gainLoss / investmentValue) * 100);
-                        const investmentDate = new Date(asset.purchase_date).toLocaleDateString();
+                        const percentChange = investmentValue ? ((gainLoss / investmentValue) * 100) : 0;
+                        const investmentDate = asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString() : "N/A";
                         
                         html += `
                             <tr>
