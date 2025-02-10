@@ -53,11 +53,11 @@
                     portfolio.assets.forEach(asset => {
                         const currentPrice = typeof asset.current_price === 'number' ? asset.current_price : 0;
                         const currentValue = asset.quantity * currentPrice;
-                        const averagePrice = typeof asset.average_price === 'number' ? asset.average_price : 0;
-                        const investmentValue = asset.quantity * averagePrice;
+                        const averagePrice = typeof asset.average_price === 'number' ? asset.average_price : "Not available";
+                        const investmentValue = asset.quantity * (averagePrice !== "Not available" ? averagePrice : 0);
                         const gainLoss = currentValue - investmentValue;
                         const percentChange = investmentValue ? ((gainLoss / investmentValue) * 100) : 0;
-                        const investmentDate = asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString() : "N/A";
+                        const investmentDate = asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString() : "Not available";
                         
                         html += `
                             <tr>
@@ -65,7 +65,7 @@
                                 <td>${asset.quantity}</td>
                                 <td>₹${currentPrice.toFixed(2)}</td>
                                 <td>₹${currentValue.toFixed(2)}</td>
-                                <td>₹${averagePrice.toFixed(2)}</td>
+                                <td>₹${averagePrice === "Not available" ? averagePrice : averagePrice.toFixed(2)}</td>
                                 <td>₹${investmentValue.toFixed(2)}</td>
                                 <td style="color: ${gainLoss >= 0 ? 'green' : 'red'}">
                                     ₹${gainLoss.toFixed(2)}
