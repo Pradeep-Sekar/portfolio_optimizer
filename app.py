@@ -5,6 +5,7 @@ import os
 from routes import api
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "your_super_secret_key")
 
 # JWT Configuration
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "supersecretkey")
@@ -51,5 +52,4 @@ def fetch_portfolio_data(user_email):
         ]
     }
 if __name__ == "__main__":
-    app.secret_key = os.environ.get("SECRET_KEY", "anothersecretkey")
     app.run(debug=True)
