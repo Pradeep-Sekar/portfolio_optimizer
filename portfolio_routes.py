@@ -68,18 +68,38 @@ def get_portfolio():
                 "message": "No portfolio found"
             }), 404
 
-        # Calculate total portfolio value
-        portfolio_value = sum(
-            asset.get("quantity", 0) * asset.get("average_price", 0)
-            for asset in portfolio.get("assets", [])
-        )
+        # Initialize PortfolioOptimizer for getting current prices
+        assets = [asset["ticker"] for asset in portfolio.get("assets", [])]
+        optimizer = PortfolioOptimizer(assets, returns=np.zeros(len(assets)), cov_matrix=np.zeros((len(assets), len(assets))))
+        
+        # Get current prices for all assets
+        current_prices = optimizer.get_live_prices()
+        
+        # Calculate total portfolio value using current prices
+        portfolio_value = 0
+        updated_assets = []
+        
+        for asset in portfolio.get("assets", []):
+            current_price = current_prices.get(asset["ticker"])
+            if current_price is None:
+                print(f"Warning: Could not fetch current price for {asset['ticker']}")
+                current_price = asset.get("average_price", 0)  # Fallback to average price
+                
+            asset_value = asset.get("quantity", 0) * current_price
+            portfolio_value += asset_value
+            
+            # Add current price to asset data
+            asset_data = asset.copy()
+            asset_data["current_price"] = current_price
+            asset_data["current_value"] = round(asset_value, 2)
+            updated_assets.append(asset_data)
 
         return jsonify({
             "status": "success",
             "data": {
                 "user_email": portfolio["user_email"],
                 "portfolio_value": round(portfolio_value, 2),
-                "assets": portfolio["assets"],
+                "assets": updated_assets,
                 "created_at": portfolio["created_at"]
             }
         })
