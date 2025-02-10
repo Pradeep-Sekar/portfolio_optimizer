@@ -15,5 +15,20 @@
         <li>{{ asset.ticker }}: {{ asset.quantity }} shares at ${{ asset.current_price }} each</li>
         {% endfor %}
     </ul>
+    
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        function logout() {
+            console.log("Logging out...");
+            // Clear all auth data from localStorage
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("token_type");
+            localStorage.removeItem("token_expiry");
+            
+            console.log("User logged out successfully");
+            window.location.replace("/login");
+        }
+    </script>
 </body>
 </html>
