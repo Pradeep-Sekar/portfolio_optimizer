@@ -64,7 +64,9 @@ def login():
     # Store user email in session and generate JWT token
     session["user_email"] = email
     access_token = create_access_token(identity=email)
-    return jsonify({
+    
+    print("Returning success response")
+    response = jsonify({
         "status": "success",
         "message": "Login successful",
         "data": {
@@ -73,6 +75,7 @@ def login():
             "expires_in": 86400  # 24 hours in seconds
         }
     })
+    return response
 
 # Protected Route (Requires JWT)
 @user_api.route("/get_users", methods=["GET"])
