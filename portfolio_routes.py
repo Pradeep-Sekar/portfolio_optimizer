@@ -56,10 +56,25 @@ def add_to_portfolio():
 def get_portfolio_history():
     try:
         user_email = get_jwt_identity()
+        days = int(request.args.get("days", 30))  # Default to last 30 days
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days)
+
+        # Fetch portfolio history within the specified date range
         portfolio_history = list(db.portfolio_history.find(
-            {"user_email": user_email},
+            {
+                "user_email": user_email,
+                "date": {"$gte": start_date.isoformat(), "$lte": end_date.isoformat()}
+            },
             {"_id": 0}
         ).sort("date", -1))  # Sort by date descending (most recent first)
+
+        # Calculate percentage change compared to the previous day
+        for i in range(1, len(portfolio_history)):
+            previous_value = portfolio_history[i]["portfolio_value"]
+            current_value = portfolio_history[i - 1]["portfolio_value"]
+            percentage_change = ((current_value - previous_value) / previous_value) * 100
+            portfolio_history[i - 1]["percentage_change"] = round(percentage_change, 2)
 
         return jsonify(portfolio_history)
 
