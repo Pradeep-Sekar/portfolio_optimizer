@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <p>User: {{ portfolio.user_email }}</p>
+    <p>Portfolio Value: ${{ portfolio.portfolio_value }}</p>
+    <h2>Assets</h2>
+    <ul>
+        {% for asset in portfolio.assets %}
+        <li>{{ asset.ticker }}: {{ asset.quantity }} shares at ${{ asset.current_price }} each</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
