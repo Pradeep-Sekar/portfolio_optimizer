@@ -1,12 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from pymongo import MongoClient
-from werkzeug.security import generate_password_hash #, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-
-# Temporarily disable hashing for debugging
-def check_password_hash(stored_password, entered_password):
-    return stored_password == entered_password
 
 # MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
@@ -46,14 +42,23 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+
     user = db.users.find_one({"email": email})
-    
-    if not user or not check_password_hash(user["password_hash"], password):
+    if not user:
+        return jsonify({"error": "Invalid email or password"}), 401
+        
+    if not check_password_hash(user["password_hash"], password):
         return jsonify({"error": "Invalid email or password"}), 401
 
-    # Generate JWT token
+    # Store user email in session and generate JWT token
+    session["user_email"] = email
     access_token = create_access_token(identity=email)
-    return jsonify({"access_token": access_token})
+    return jsonify({
+        "message": "Login successful",
+        "access_token": access_token
+    })
 
 # Protected Route (Requires JWT)
 @user_api.route("/get_users", methods=["GET"])
