@@ -33,7 +33,7 @@
                     const lastUpdated = new Date().toLocaleString();
                     let html = `
                         <p>User: ${portfolio.user_email}</p>
-                        <p>Portfolio Value: ₹${(portfolio.portfolio_value || 0).toFixed(2)}</p>
+                        <p>Portfolio Value: ₹${(portfolio.portfolio_value || 0).toLocaleString('en-IN')}</p>
                         <p>Last Updated: ${lastUpdated}</p>
                         <h2>Assets</h2>
                         <table border="1" style="border-collapse: collapse; width: 100%;">
@@ -53,22 +53,22 @@
                     portfolio.assets.forEach(asset => {
                         const currentPrice = typeof asset.current_price === 'number' ? asset.current_price : 0;
                         const currentValue = asset.quantity * currentPrice;
-                        const averagePrice = typeof asset.average_price === 'number' ? asset.average_price : "Not available";
-                        const investmentValue = asset.quantity * (averagePrice !== "Not available" ? averagePrice : 0);
+                        const purchasePrice = typeof asset.purchase_price === 'number' ? asset.purchase_price : 0;
+                        const investmentValue = asset.quantity * purchasePrice;
                         const gainLoss = currentValue - investmentValue;
                         const percentChange = investmentValue ? ((gainLoss / investmentValue) * 100) : 0;
-                        const investmentDate = asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString() : "Not available";
+                        const investmentDate = asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString() : "Unknown";
                         
                         html += `
                             <tr>
                                 <td>${asset.ticker}</td>
                                 <td>${asset.quantity}</td>
-                                <td>₹${currentPrice.toFixed(2)}</td>
-                                <td>₹${currentValue.toFixed(2)}</td>
-                                <td>₹${averagePrice === "Not available" ? averagePrice : averagePrice.toFixed(2)}</td>
-                                <td>₹${investmentValue.toFixed(2)}</td>
+                                <td>₹${currentPrice.toLocaleString('en-IN')}</td>
+                                <td>₹${currentValue.toLocaleString('en-IN')}</td>
+                                <td>₹${purchasePrice.toLocaleString('en-IN')}</td>
+                                <td>₹${investmentValue.toLocaleString('en-IN')}</td>
                                 <td style="color: ${gainLoss >= 0 ? 'green' : 'red'}">
-                                    ₹${gainLoss.toFixed(2)}
+                                    ₹${gainLoss.toLocaleString('en-IN')}
                                 </td>
                                 <td style="color: ${gainLoss >= 0 ? 'green' : 'red'}">
                                     ${percentChange.toFixed(2)}%
