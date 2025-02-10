@@ -23,6 +23,7 @@
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
 
+            console.log("Login request sent...");
             fetch("/user/login", {
                 method: "POST",
                 headers: {
@@ -33,6 +34,8 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log("Full API Response:", data);
+                
                 if (data.status === "success") {
                     console.log("Login Success!");
                     // Store token and expiration
@@ -44,7 +47,7 @@
                     window.location.replace("/dashboard");
                 } else {
                     console.error("Login failed:", data.message);
-                    document.getElementById("errorMessage").textContent = "Login Failed.";
+                    document.getElementById("errorMessage").textContent = data.message || "Login failed";
                 }
             })
             .catch(error => {
