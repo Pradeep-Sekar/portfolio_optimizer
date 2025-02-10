@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, session, request
+from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 import os
@@ -17,10 +17,16 @@ app.register_blueprint(api)
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        # Simulate login process
+        # Simulate login process with a simple check
         user_email = request.form.get("email")
-        session["user_email"] = user_email
-        return redirect(url_for("dashboard"))
+        password = request.form.get("password")
+
+        # Replace this with actual authentication logic
+        if user_email == "test@example.com" and password == "password":
+            session["user_email"] = user_email
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Invalid email or password. Please try again.")
     return render_template("login.html")
 
 @app.route("/dashboard")
@@ -44,4 +50,6 @@ def fetch_portfolio_data(user_email):
             {"ticker": "GOOGL", "quantity": 5, "purchase_price": 1000, "current_price": 1100}
         ]
     }
+if __name__ == "__main__":
+    app.secret_key = os.environ.get("SECRET_KEY", "anothersecretkey")
     app.run(debug=True)
