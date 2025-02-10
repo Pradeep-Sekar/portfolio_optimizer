@@ -10,6 +10,9 @@
     <div id="portfolioData">Loading portfolio...</div>
     <div id="errorMessage" style="color: red;"></div>
     
+    <h2>Portfolio History</h2>
+    <table id="portfolioHistory" border="1" style="border-collapse: collapse; width: 100%;"></table>
+    
     <button onclick="logout()">Logout</button>
 
     <script>
@@ -95,6 +98,40 @@
                     "Error loading portfolio data";
             });
         }
+        function fetchPortfolioHistory() {
+            const token = localStorage.getItem("access_token");
+            if (!token) return;
+
+            fetch("/portfolio/history", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    const historyTable = document.getElementById("portfolioHistory");
+                    historyTable.innerHTML = `<tr>
+                        <th>Date</th>
+                        <th>Portfolio Value</th>
+                        <th>Assets</th>
+                    </tr>`;
+
+                    data.data.forEach(entry => {
+                        let assetDetails = entry.assets.map(a => 
+                            `${a.ticker}: ${a.quantity} @ ₹${a.current_price}`).join("<br>");
+
+                        historyTable.innerHTML += `<tr>
+                            <td>${entry.date}</td>
+                            <td>₹${entry.portfolio_value.toFixed(2)}</td>
+                            <td>${assetDetails}</td>
+                        </tr>`;
+                    });
+                }
+            })
+            .catch(error => console.error("Error fetching history:", error));
+        }
+
         // Check authentication and load portfolio on page load
         window.addEventListener('load', function() {
             const token = localStorage.getItem("access_token");
@@ -104,6 +141,7 @@
                 return;
             }
             fetchPortfolio();
+            fetchPortfolioHistory();
         });
 
         function logout() {
