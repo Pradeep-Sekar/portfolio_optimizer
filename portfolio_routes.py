@@ -51,6 +51,45 @@ def add_to_portfolio():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@portfolio_api.route("/portfolio", methods=["GET"])
+@jwt_required()
+def get_portfolio():
+    """
+    Fetch the current user's portfolio details.
+    :return: JSON response with portfolio information
+    """
+    try:
+        user_email = get_jwt_identity()
+        portfolio = db.portfolios.find_one({"user_email": user_email}, {"_id": 0})
+
+        if not portfolio:
+            return jsonify({
+                "status": "error",
+                "message": "No portfolio found"
+            }), 404
+
+        # Calculate total portfolio value
+        portfolio_value = sum(
+            asset.get("quantity", 0) * asset.get("average_price", 0)
+            for asset in portfolio.get("assets", [])
+        )
+
+        return jsonify({
+            "status": "success",
+            "data": {
+                "user_email": portfolio["user_email"],
+                "portfolio_value": round(portfolio_value, 2),
+                "assets": portfolio["assets"],
+                "created_at": portfolio["created_at"]
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 @portfolio_api.route("/history", methods=["GET"])
 @jwt_required()
 def get_portfolio_history():
