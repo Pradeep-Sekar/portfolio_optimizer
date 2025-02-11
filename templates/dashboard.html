@@ -100,16 +100,24 @@
         }
         function fetchPortfolioHistory() {
             const token = localStorage.getItem("access_token");
-            if (!token) return;
+            if (!token) {
+                console.error("No token found, redirecting to login...");
+                window.location.href = "/login";
+                return;
+            }
 
             fetch("/portfolio/history", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.json();
+            })
             .then(data => {
-                if (data.status === "success") {
+                console.log("Portfolio History API Response:", data);
+                if (data.status === "success" && data.data.length > 0) {
                     const historyTable = document.getElementById("portfolioHistory");
                     historyTable.innerHTML = `<tr>
                         <th>Date</th>
@@ -127,9 +135,14 @@
                             <td>${assetDetails}</td>
                         </tr>`;
                     });
+                } else {
+                    document.getElementById("portfolioHistory").innerHTML = "<p>No historical data found.</p>";
                 }
             })
-            .catch(error => console.error("Error fetching history:", error));
+            .catch(error => {
+                console.error("Error fetching history:", error);
+                document.getElementById("portfolioHistory").innerHTML = "<p>Failed to load historical data.</p>";
+            });
         }
 
         // Check authentication and load portfolio on page load
