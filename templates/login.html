@@ -23,35 +23,31 @@
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
 
-            console.log("Login request sent...");
             fetch("/user/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ email: email, password: password }),
-                credentials: 'include'
+                body: JSON.stringify({ email: email, password: password })
             })
             .then(response => response.json())
             .then(data => {
-                console.log("Full API Response:", data);
-                
-                if (data.status === "success") {
-                    console.log("Login Success!");
-                    // Store token and expiration
+                console.log("Login Response:", data);
+
+                if (data.data && data.data.access_token) {
+                    // Store token securely
                     localStorage.setItem("access_token", data.data.access_token);
-                    localStorage.setItem("token_type", data.data.token_type);
-                    localStorage.setItem("token_expiry", Date.now() + (data.data.expires_in * 1000));
+                    console.log("Token stored successfully in localStorage:", data.data.access_token);
                     
-                    console.log("Redirecting to dashboard...");
-                    window.location.replace("/dashboard");
+                    // Redirect to dashboard
+                    window.location.href = "/dashboard";
                 } else {
-                    console.error("Login failed:", data.message);
-                    document.getElementById("errorMessage").textContent = data.message || "Login failed";
+                    document.getElementById("errorMessage").textContent = 
+                        data.error || "Login failed";
                 }
             })
             .catch(error => {
-                console.error("Error:", error);
+                console.error("Login Error:", error);
                 document.getElementById("errorMessage").textContent = 
                     "An error occurred during login";
             });
