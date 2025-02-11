@@ -118,23 +118,14 @@
             .then(data => {
                 console.log("Portfolio History API Response:", data);
                 if (data.status === "success" && data.data.length > 0) {
-                    const historyTable = document.getElementById("portfolioHistory");
-                    historyTable.innerHTML = `<tr>
-                        <th>Date</th>
-                        <th>Portfolio Value</th>
-                        <th>Assets</th>
-                    </tr>`;
-
+                    let historyHtml = "<h2>Portfolio History</h2><table border='1'><tr><th>Date</th><th>Value</th></tr>";
+                    
                     data.data.forEach(entry => {
-                        let assetDetails = entry.assets.map(a => 
-                            `${a.ticker}: ${a.quantity} @ ₹${a.current_price}`).join("<br>");
-
-                        historyTable.innerHTML += `<tr>
-                            <td>${entry.date}</td>
-                            <td>₹${entry.portfolio_value.toFixed(2)}</td>
-                            <td>${assetDetails}</td>
-                        </tr>`;
+                        historyHtml += `<tr><td>${entry.date}</td><td>₹${entry.portfolio_value.toFixed(2)}</td></tr>`;
                     });
+
+                    historyHtml += "</table>";
+                    document.getElementById("portfolioHistory").innerHTML = historyHtml;
                 } else {
                     document.getElementById("portfolioHistory").innerHTML = "<p>No historical data found.</p>";
                 }
@@ -145,8 +136,7 @@
             });
         }
 
-        // Check authentication and load portfolio on page load
-        window.addEventListener('load', function() {
+        window.addEventListener("load", function () {
             const token = localStorage.getItem("access_token");
             if (!token) {
                 console.log("No token found, redirecting to login");
